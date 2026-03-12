@@ -48,8 +48,8 @@ ChartJS.register(
 );
 
 // Fix: Use correct port 5001 (matching your server)
-const API_URL = 'http://localhost:5000/api';
-const SOCKET_URL = 'http://localhost:5000';
+const API_URL = 'https://heek-e-scrapper.onrender.com/api';
+const SOCKET_URL = 'https://heek-e-scrapper.onrender.com';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
