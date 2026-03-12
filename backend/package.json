@@ -1,0 +1,29 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "scraper-system/\r │\r ├── src/\r │\r │  ├── server.js\r │\r │  ├── config/\r │  │    config.js\r │\r │  ├── lib/\r │  │    BrowserPool.js\r │  │    WorkerPool.js\r │  │    ProxyManager.js\r │  │    Fingerprint.js\r │\r │  ├── utils/\r │  │    email.js\r │  │    parse.js\r │\r │  ├── scrapers/\r │  │    YouTubeApiScraper.js\r │  │    YouTubeBrowserScraper.js\r │  │    YouTubeGoogleScraper.js\r │  │\r │  │    InstagramScraper.js\r │  │    InstagramGoogleScraper.js\r │  │\r │  │    LinkedInScraper.js\r │  │\r │  │    XScraper.js\r │\r │  ├── models/\r │  │    Channel.js\r │  │    Queue.js\r │\r │  ├── services/\r │  │    QueueService.js\r │  │    ScraperService.js\r │\r │  └── sessions/\r │\r ├── package.json\r └── .env",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/server.js",
+    "worker": "nodemon worker.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "axios": "^1.13.6",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "googleapis": "^171.4.0",
+    "mongoose": "^9.3.0",
+    "p-limit": "^7.3.0",
+    "playwright": "^1.58.2",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
