@@ -1451,7 +1451,7 @@ async function runDailyScrape() {
 // Express middleware
 app.use(express.json());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5175',
+  origin: 'https://illustrious-strudel-92935b.netlify.app',
   credentials: true
 }));
 
