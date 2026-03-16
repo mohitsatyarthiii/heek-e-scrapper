@@ -1,5 +1,5 @@
 // src/services/api.js
-const API_URL = 'https://heek-e-scrapper.onrender.com/api';
+const API_URL = 'http://localhost:5000/api';
 
 class ApiService {
   async request(endpoint, options = {}) {
