@@ -225,7 +225,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin:'*',
+    origin:'https://illustrious-strudel-92935b.netlify.app',
     credentials: true
   }
 });
