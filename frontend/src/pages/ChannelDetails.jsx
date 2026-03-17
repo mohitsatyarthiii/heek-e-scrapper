@@ -42,7 +42,7 @@ export const ChannelDetails = () => {
   const fetchChannelDetails = async () => {
     setLoading(true);
     try {
-      const data = await api.getChannel(id);
+      const data = await api.getChannel(_id);
       setChannel(data);
     } catch (error) {
       toast.error('Failed to fetch channel details');

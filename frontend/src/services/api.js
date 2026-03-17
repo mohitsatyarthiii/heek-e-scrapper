@@ -1,5 +1,5 @@
 // src/services/api.js
-const API_URL = 'https://api.heekentertainment.com/api';
+const API_URL = 'http://localhost:5000/api';
 
 class ApiService {
   async request(endpoint, options = {}) {
@@ -29,7 +29,7 @@ class ApiService {
   }
 
   async getChannel(id) {
-    return this.request(`/channels/${id}`);
+    return this.request(`/channels/${_id}`);
   }
 
   async exportChannels() {
