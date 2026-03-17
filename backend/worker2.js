@@ -270,7 +270,13 @@ const apiKeys = [
       process.env.YOUTUBE_API_KEY_31, process.env.YOUTUBE_API_KEY_32,
       process.env.YOUTUBE_API_KEY_33, process.env.YOUTUBE_API_KEY_34,
       process.env.YOUTUBE_API_KEY_35, process.env.YOUTUBE_API_KEY_36,
-      process.env.YOUTUBE_API_KEY_37, 
+      process.env.YOUTUBE_API_KEY_37, process.env.YOUTUBE_API_KEY_38,
+      process.env.YOUTUBE_API_KEY_39, process.env.YOUTUBE_API_KEY_40,
+      process.env.YOUTUBE_API_KEY_41, process.env.YOUTUBE_API_KEY_42,
+      process.env.YOUTUBE_API_KEY_43, process.env.YOUTUBE_API_KEY_44,
+      process.env.YOUTUBE_API_KEY_45, process.env.YOUTUBE_API_KEY_46,
+      process.env.YOUTUBE_API_KEY_47, process.env.YOUTUBE_API_KEY_48,
+      process.env.YOUTUBE_API_KEY_49, process.env.YOUTUBE_API_KEY_50
 ].filter(key => key && key !== 'YOUR_API_KEY_1' && key !== 'YOUR_API_KEY_2');
 
 if (apiKeys.length === 0) {
