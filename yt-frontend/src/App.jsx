@@ -1,277 +1,422 @@
-import { useState, useEffect } from 'react'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import './App.css';
 
 function App() {
-  const [keyword, setKeyword] = useState('')
-  const [targetEmails, setTargetEmails] = useState(100)
-  const [country, setCountry] = useState('United States')
-  const [jobs, setJobs] = useState([])
-  const [currentJob, setCurrentJob] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [keywords, setKeywords] = useState('');
+  const [maxProfiles, setMaxProfiles] = useState(50);
+  const [isScraping, setIsScraping] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const [stats, setStats] = useState({
+    totalKeywords: 0,
+    completedKeywords: 0,
+    totalProfilesFound: 0,
+    totalProfilesScraped: 0,
+    totalEmailsFound: 0,
+    startTime: null,
+    endTime: null
+  });
+  const [profiles, setProfiles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [selectedKeyword, setSelectedKeyword] = useState('all');
 
-  const BACKEND_URL = 'http://localhost:3000'
+  // Fetch status and logs periodically
+  useEffect(() => {
+    if (!autoRefresh) return;
 
-  // Start a new scraping job
+    const fetchData = async () => {
+      try {
+        const [statusRes, logsRes, profilesRes] = await Promise.all([
+          fetch('http://localhost:5001/api/status'),
+          fetch('http://localhost:5001/api/logs?limit=50'),
+          fetch(`http://localhost:5001/api/profiles?limit=100&keyword=${selectedKeyword !== 'all' ? selectedKeyword : ''}`)
+        ]);
+
+        const statusData = await statusRes.json();
+        const logsData = await logsRes.json();
+        const profilesData = await profilesRes.json();
+
+        setIsScraping(statusData.isScraping);
+        setStats(statusData.stats);
+        setLogs(logsData.logs || []);
+        setProfiles(profilesData.profiles || []);
+      } catch (err) {
+        console.error('Failed to fetch data:', err);
+        setError('Failed to connect to server. Make sure the backend is running.');
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 3000); // Refresh every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, selectedKeyword]);
+
   const handleStartScraping = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     
-    if (!keyword.trim()) {
-      setError('Please enter a keyword')
-      return
+    if (!keywords.trim()) {
+      setError('Please enter at least one keyword');
+      return;
     }
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError(null);
 
     try {
-      const response = await fetch(`${BACKEND_URL}/api/scraper/jobs`, {
+      const keywordList = keywords.split(',').map(k => k.trim()).filter(Boolean);
+      
+      const response = await fetch('http://localhost:5001/api/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          keyword: keyword.trim(),
-          targetEmails: parseInt(targetEmails),
-          country: country || undefined,
+          keywords: keywordList,
+          maxProfiles: maxProfiles
         }),
-      })
+      });
+
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(`Failed to start job: ${response.statusText}`)
+        throw new Error(data.error || 'Failed to start scraper');
       }
 
-      const data = await response.json()
-      const jobId = data.jobId
-
-      setCurrentJob({
-        id: jobId,
-        keyword: keyword.trim(),
-        targetEmails: parseInt(targetEmails),
-        country: country,
-        status: 'starting',
-        progress: {
-          queriesExecuted: 0,
-          channelsDiscovered: 0,
-          channelsScraped: 0,
-          emailsFound: 0,
-          uniqueEmails: 0,
-          percentComplete: 0,
-        },
-        emails: [],
-        createdAt: new Date(),
-      })
-
-      setJobs([...jobs, jobId])
-      setKeyword('')
-      setError('')
-
-      // Start monitoring the job
-      monitorJob(jobId)
+      // Clear form and show success
+      setKeywords('');
+      setError(null);
+      
     } catch (err) {
-      setError(err.message)
-      setLoading(false)
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  // Monitor job progress
-  const monitorJob = async (jobId) => {
+  const handleStopScraping = async () => {
     try {
-      const interval = setInterval(async () => {
-        const response = await fetch(`${BACKEND_URL}/api/scraper/jobs/${jobId}`)
-        if (!response.ok) return
+      const response = await fetch('http://localhost:5001/api/stop', {
+        method: 'POST',
+      });
 
-        const data = await response.json()
-        const job = data.job
-
-        setCurrentJob(prev => ({
-          ...prev,
-          status: job.status,
-          progress: job.progress,
-          emails: job.emails || [],
-        }))
-
-        if (job.status === 'completed' || job.status === 'failed') {
-          clearInterval(interval)
-          setLoading(false)
-        }
-      }, 5000) // Check every 5 seconds
-
-      return () => clearInterval(interval)
+      if (!response.ok) {
+        throw new Error('Failed to stop scraper');
+      }
     } catch (err) {
-      console.error('Error monitoring job:', err)
-      setLoading(false)
+      setError(err.message);
     }
-  }
+  };
+
+  const handleDeleteProfiles = async () => {
+    if (!window.confirm('Are you sure you want to delete all profiles?')) return;
+
+    try {
+      const response = await fetch(`http://localhost:5001/api/profiles?keyword=${selectedKeyword !== 'all' ? selectedKeyword : ''}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete profiles');
+      }
+
+      // Refresh profiles
+      const profilesRes = await fetch(`http://localhost:5001/api/profiles?limit=100&keyword=${selectedKeyword !== 'all' ? selectedKeyword : ''}`);
+      const profilesData = await profilesRes.json();
+      setProfiles(profilesData.profiles || []);
+      
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString();
+  };
+
+  const getUniqueKeywords = () => {
+    const keywords = profiles.map(p => p.keyword).filter(Boolean);
+    return ['all', ...new Set(keywords)];
+  };
+
+  const getLogColor = (level) => {
+    switch (level) {
+      case 'error': return 'log-error';
+      case 'warning': return 'log-warning';
+      case 'success': return 'log-success';
+      case 'info': return 'log-info';
+      default: return '';
+    }
+  };
 
   return (
-    <div className="app-container">
+    <div className="App">
       <header className="app-header">
-        <h1>🎯 YouTube Email Scraper</h1>
-        <p>Extract emails and channels from YouTube using AI-powered keyword search</p>
+        <h1>📸 Instagram Profile Scraper</h1>
+        <p>Search and extract emails from Instagram profiles</p>
       </header>
 
       <main className="app-main">
-        {/* Input Form */}
-        <section className="form-section">
-          <div className="form-container">
-            <h2>Start New Scraping Job</h2>
+        {error && (
+          <div className="error-message">
+            <strong>Error:</strong> {error}
+            <button onClick={() => setError(null)} className="close-btn">×</button>
+          </div>
+        )}
+
+        {/* Control Panel */}
+        <section className="control-panel">
+          <h2>🎮 Control Panel</h2>
+          
+          <form onSubmit={handleStartScraping} className="scraper-form">
+            <div className="form-group">
+              <label htmlFor="keywords">Keywords (comma-separated):</label>
+              <textarea
+                id="keywords"
+                value={keywords}
+                onChange={(e) => setKeywords(e.target.value)}
+                placeholder="e.g., marketing agency, web developers, digital artists"
+                rows="3"
+                disabled={isScraping || loading}
+              />
+              <small>Enter keywords to search for Instagram profiles</small>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="maxProfiles">Max profiles per keyword:</label>
+              <input
+                type="number"
+                id="maxProfiles"
+                value={maxProfiles}
+                onChange={(e) => setMaxProfiles(parseInt(e.target.value) || 10)}
+                min="1"
+                max="200"
+                disabled={isScraping || loading}
+              />
+            </div>
+
+            <div className="form-actions">
+              {!isScraping ? (
+                <button 
+                  type="submit" 
+                  className="btn btn-primary"
+                  disabled={loading || !keywords.trim()}
+                >
+                  {loading ? 'Starting...' : '🚀 Start Scraping'}
+                </button>
+              ) : (
+                <button 
+                  type="button" 
+                  className="btn btn-danger"
+                  onClick={handleStopScraping}
+                >
+                  ⏹️ Stop Scraping
+                </button>
+              )}
+            </div>
+          </form>
+        </section>
+
+        {/* Stats Dashboard */}
+        <section className="stats-panel">
+          <h2>📊 Scraping Statistics</h2>
+          
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-value">{stats.totalKeywords || 0}</div>
+              <div className="stat-label">Total Keywords</div>
+            </div>
             
-            {error && <div className="error-message">{error}</div>}
+            <div className="stat-card">
+              <div className="stat-value">{stats.completedKeywords || 0}</div>
+              <div className="stat-label">Completed</div>
+            </div>
             
-            <form onSubmit={handleStartScraping}>
-              <div className="form-group">
-                <label htmlFor="keyword">Keyword *</label>
-                <input
-                  id="keyword"
-                  type="text"
-                  placeholder="e.g., digital marketing agencies"
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  disabled={loading}
-                />
+            <div className="stat-card">
+              <div className="stat-value">{stats.totalProfilesFound || 0}</div>
+              <div className="stat-label">Profiles Found</div>
+            </div>
+            
+            <div className="stat-card">
+              <div className="stat-value">{stats.totalProfilesScraped || 0}</div>
+              <div className="stat-label">Profiles Scraped</div>
+            </div>
+            
+            <div className="stat-card highlight">
+              <div className="stat-value">{stats.totalEmailsFound || 0}</div>
+              <div className="stat-label">📧 Emails Found</div>
+            </div>
+            
+            <div className="stat-card">
+              <div className="stat-value">
+                {stats.startTime ? formatDate(stats.startTime) : 'Not started'}
               </div>
+              <div className="stat-label">Start Time</div>
+            </div>
+          </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="targetEmails">Target Emails</label>
-                  <input
-                    id="targetEmails"
-                    type="number"
-                    min="10"
-                    max="5000"
-                    step="50"
-                    value={targetEmails}
-                    onChange={(e) => setTargetEmails(e.target.value)}
-                    disabled={loading}
-                  />
+          {isScraping && (
+            <div className="scraping-indicator">
+              <div className="spinner"></div>
+              <span>Scraping in progress...</span>
+            </div>
+          )}
+        </section>
+
+        {/* Real-time Logs */}
+        <section className="logs-panel">
+          <div className="panel-header">
+            <h2>📋 Real-time Logs</h2>
+            <label className="auto-refresh-toggle">
+              <input
+                type="checkbox"
+                checked={autoRefresh}
+                onChange={(e) => setAutoRefresh(e.target.checked)}
+              />
+              Auto-refresh
+            </label>
+          </div>
+
+          <div className="logs-container">
+            {logs.length === 0 ? (
+              <div className="no-logs">No logs yet. Start scraping to see activity.</div>
+            ) : (
+              logs.map((log, index) => (
+                <div key={index} className={`log-entry ${getLogColor(log.level)}`}>
+                  <span className="log-time">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                  <span className="log-level">{log.level.toUpperCase()}</span>
+                  {log.keyword && <span className="log-keyword">[{log.keyword}]</span>}
+                  <span className="log-message">{log.message}</span>
+                  {log.url && (
+                    <a href={log.url} target="_blank" rel="noopener noreferrer" className="log-url">
+                      🔗
+                    </a>
+                  )}
                 </div>
-
-                <div className="form-group">
-                  <label htmlFor="country">Country</label>
-                  <input
-                    id="country"
-                    type="text"
-                    placeholder="e.g., United States"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <button 
-                type="submit" 
-                className="btn btn-primary"
-                disabled={loading}
-              >
-                {loading ? '⏳ Scraping...' : '🚀 Start Scraping'}
-              </button>
-            </form>
+              ))
+            )}
           </div>
         </section>
 
-        {/* Current Job Progress */}
-        {currentJob && (
-          <section className="progress-section">
-            <div className="progress-container">
-              <h2>📊 Scraping Progress</h2>
-              
-              <div className="job-info">
-                <div className="info-item">
-                  <span className="label">Keyword:</span>
-                  <span className="value">{currentJob.keyword}</span>
-                </div>
-                <div className="info-item">
-                  <span className="label">Target:</span>
-                  <span className="value">{currentJob.targetEmails} emails</span>
-                </div>
-                <div className="info-item">
-                  <span className="label">Status:</span>
-                  <span className={`status status-${currentJob.status}`}>
-                    {currentJob.status.toUpperCase()}
-                  </span>
-                </div>
-              </div>
+        {/* Profiles Table */}
+        <section className="profiles-panel">
+          <div className="panel-header">
+            <h2>📇 Scraped Profiles ({profiles.length})</h2>
+            
+            <div className="panel-controls">
+              <select 
+                value={selectedKeyword} 
+                onChange={(e) => setSelectedKeyword(e.target.value)}
+                className="keyword-filter"
+              >
+                {getUniqueKeywords().map(keyword => (
+                  <option key={keyword} value={keyword}>
+                    {keyword === 'all' ? 'All Keywords' : keyword}
+                  </option>
+                ))}
+              </select>
 
-              <div className="progress-bar-container">
-                <div className="progress-bar">
-                  <div 
-                    className="progress-fill"
-                    style={{ width: `${Math.min(currentJob.progress.percentComplete, 100)}%` }}
-                  />
-                </div>
-                <div className="progress-text">
-                  {Math.min(currentJob.progress.percentComplete, 100)}% Complete
-                </div>
-              </div>
-
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-value">{currentJob.progress.queriesExecuted}</div>
-                  <div className="stat-label">Queries Executed</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-value">{currentJob.progress.channelsDiscovered}</div>
-                  <div className="stat-label">Channels Discovered</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-value">{currentJob.progress.channelsScraped}</div>
-                  <div className="stat-label">Channels Scraped</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-value">{currentJob.progress.emailsFound}</div>
-                  <div className="stat-label">Emails Found</div>
-                </div>
-                <div className="stat-card highlight">
-                  <div className="stat-value">{currentJob.progress.uniqueEmails}</div>
-                  <div className="stat-label">Unique Emails</div>
-                </div>
-              </div>
-
-              {currentJob.progress.uniqueEmails > 0 && (
-                <div className="emails-section">
-                  <h3>📧 Extracted Emails ({currentJob.emails?.length || 0})</h3>
-                  <div className="emails-list">
-                    {currentJob.emails?.slice(0, 10).map((email, idx) => (
-                      <div key={idx} className="email-item">
-                        <span className="email-address">{email.email || email}</span>
-                        <span className="email-source">{email.source || 'unknown'}</span>
-                      </div>
-                    ))}
-                    {currentJob.emails?.length > 10 && (
-                      <div className="email-item-count">
-                        ... and {currentJob.emails.length - 10} more emails
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              <button 
+                onClick={handleDeleteProfiles}
+                className="btn btn-danger btn-small"
+                disabled={profiles.length === 0}
+              >
+                🗑️ Delete {selectedKeyword !== 'all' ? 'Filtered' : 'All'}
+              </button>
             </div>
-          </section>
-        )}
+          </div>
 
-        {/* Job History */}
-        {jobs.length > 0 && (
-          <section className="history-section">
-            <h2>📋 Job History</h2>
-            <div className="jobs-list">
-              {jobs.map((jobId, idx) => (
-                <div key={idx} className="job-item">
-                  <span className="job-id">{jobId.substring(0, 12)}...</span>
-                  <span className="job-time">ID: {jobId}</span>
-                </div>
-              ))}
+          {profiles.length === 0 ? (
+            <div className="no-profiles">No profiles scraped yet.</div>
+          ) : (
+            <div className="table-container">
+              <table className="profiles-table">
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>📧 Emails</th>
+                    <th>📞 Phones</th>
+                    <th>Website</th>
+                    <th>Keyword</th>
+                    <th>Scraped At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {profiles.map((profile) => (
+                    <tr key={profile._id || profile.profileUrl}>
+                      <td>
+                        <a 
+                          href={profile.profileUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="profile-link"
+                        >
+                          @{profile.username || 'N/A'}
+                        </a>
+                      </td>
+                      <td>{profile.name || 'N/A'}</td>
+                      <td>
+                        {profile.emails && profile.emails.length > 0 ? (
+                          <div className="email-list">
+                            {profile.emails.map((email, i) => (
+                              <span key={i} className="email-tag">{email}</span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="no-data">-</span>
+                        )}
+                      </td>
+                      <td>
+                        {profile.phones && profile.phones.length > 0 ? (
+                          <div className="phone-list">
+                            {profile.phones.map((phone, i) => (
+                              <span key={i} className="phone-tag">{phone}</span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="no-data">-</span>
+                        )}
+                      </td>
+                      <td>
+                        {profile.website ? (
+                          <a 
+                            href={profile.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="website-link"
+                          >
+                            🌐 Link
+                          </a>
+                        ) : (
+                          <span className="no-data">-</span>
+                        )}
+                      </td>
+                      <td>
+                        <span className="keyword-tag">{profile.keyword || 'N/A'}</span>
+                      </td>
+                      <td>{formatDate(profile.scrapedAt)}</td>
+                      <td>
+                        <button 
+                          className="btn-view"
+                          onClick={() => window.open(profile.profileUrl, '_blank')}
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </section>
-        )}
+          )}
+        </section>
       </main>
-
-      <footer className="app-footer">
-        <p>Backend running on {BACKEND_URL}</p>
-      </footer>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
