@@ -10,7 +10,7 @@ import {
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://api.heekentertainment.com/api';
 
 export default function Creators() {
   const [channels, setChannels] = useState([]);

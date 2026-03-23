@@ -10,7 +10,7 @@ import {
   FiGlobe, FiCpu, FiTarget, FiAward, FiCalendar, FiServer
 } from 'react-icons/fi';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://api.heekentertainment.com/api';
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
