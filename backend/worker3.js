@@ -1123,12 +1123,12 @@ class ScraperWorker {
   async scrapeChannels(task) {
     const options = task.data;
     const keywords = options.keywords;
-    const maxResults = options.count || 10000;
+    const maxResults = options.count || 500;
     const taskId = task._id;
 
     const {
       countryCode = null,
-      minSubscribers = 1000,
+      minSubscribers = 50000,
       includeRelated = true,
       relatedDepth = 2,
       enrichKeywords: shouldEnrich = true,

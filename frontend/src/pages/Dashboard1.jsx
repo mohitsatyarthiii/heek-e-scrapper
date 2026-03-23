@@ -47,7 +47,7 @@ export default function Dashboard() {
   }, []);
 
   const setupSocket = () => {
-    socketRef.current = io('http://localhost:5000');
+    socketRef.current = io('https://api.heekentertainment.com');
     
     socketRef.current.on('log', (log) => {
       setLogs(prev => [log, ...prev].slice(0, 200));
