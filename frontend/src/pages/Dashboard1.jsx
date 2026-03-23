@@ -24,9 +24,9 @@ export default function Dashboard() {
   
   const [formData, setFormData] = useState({
     keywords: '',
-    count: 10000,
+    count: 500,
     countryCode: '',
-    minSubscribers: 1000,
+    minSubscribers: 50000,
     includeRelated: true,
     relatedDepth: 2,
     enrichKeywords: true,

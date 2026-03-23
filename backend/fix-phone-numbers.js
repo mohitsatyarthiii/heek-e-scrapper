@@ -1,6 +1,3 @@
-// ==================== PHONE NUMBER VALIDATION & CORRECTION SCRIPT ====================
-// Is script ko alag se run karo: node fix-phone-numbers.js
-
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import readline from 'readline';
