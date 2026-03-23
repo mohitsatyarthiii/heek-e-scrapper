@@ -42,7 +42,7 @@ const scraperInstanceSchema = new mongoose.Schema({
     default: "idle",
   },
   currentTaskId: { type: mongoose.Schema.Types.ObjectId, ref: "Queue" },
-  preferredKeyIndices: [{ type: Number }], // Preferred keys for this scraper
+  preferredKeyIndices: [{ type: Number }],
   totalKeysAssigned: { type: Number, default: 0 },
   tasksCompleted: { type: Number, default: 0 },
   channelsScraped: { type: Number, default: 0 },
@@ -68,7 +68,7 @@ const queueSchema = new mongoose.Schema({
     includeRelated: { type: Boolean, default: true },
     relatedDepth: { type: Number, default: 2 },
     enrichKeywords: { type: Boolean, default: true },
-    saveOnlyWithEmails: { type: Boolean, default: true }, // Sirf emails wale save
+    saveOnlyWithEmails: { type: Boolean, default: true },
   },
   priority: { type: Number, default: 1 },
   status: {
@@ -136,8 +136,8 @@ const channelSchema = new mongoose.Schema({
   thumbnailUrl: { type: String },
   keywords: [{ type: String }],
   scrapedAt: { type: Date, default: Date.now },
-  emails: [{ type: String }], // Sirf emails store honge
-  phoneNumbers: [{ type: String }], // Optional store
+  emails: [{ type: String }],
+  phoneNumbers: [{ type: String }],
   socialLinks: [
     {
       platform: String,
@@ -194,12 +194,10 @@ class GlobalKeyPool {
     );
 
     // Start quota reset checker
-    setInterval(() => this.checkAndResetQuota(), 60 * 60 * 1000); // Every hour
+    setInterval(() => this.checkAndResetQuota(), 60 * 60 * 1000);
   }
 
-  // Get best available key
   getAvailableKey(scraperId, preferredIndices = []) {
-    // First try preferred keys
     for (const idx of preferredIndices) {
       const status = this.keyStatus.get(idx);
       if (status && !status.inUse && !status.quotaExceeded) {
@@ -211,7 +209,6 @@ class GlobalKeyPool {
       }
     }
 
-    // Then try any available key
     const availableKeys = [];
     for (let i = 0; i < this.allKeys.length; i++) {
       if (preferredIndices.includes(i)) continue;
@@ -226,7 +223,6 @@ class GlobalKeyPool {
       }
     }
 
-    // Sort by least failures and oldest used
     availableKeys.sort((a, b) => {
       if (a.failCount !== b.failCount) return a.failCount - b.failCount;
       if (!a.lastUsed) return -1;
@@ -251,7 +247,6 @@ class GlobalKeyPool {
     return null;
   }
 
-  // Release key back to pool
   releaseKey(index, scraperId, quotaExceeded = false, failed = false) {
     const status = this.keyStatus.get(index);
     if (status && status.assignedTo === scraperId) {
@@ -262,7 +257,6 @@ class GlobalKeyPool {
         status.quotaExceeded = true;
         status.failCount = (status.failCount || 0) + 1;
 
-        // Auto reset after 1 hour
         setTimeout(
           () => {
             status.quotaExceeded = false;
@@ -284,13 +278,11 @@ class GlobalKeyPool {
     }
   }
 
-  // Check and reset quota for keys
   checkAndResetQuota() {
     const now = Date.now();
     for (let i = 0; i < this.allKeys.length; i++) {
       const status = this.keyStatus.get(i);
       if (status.quotaExceeded) {
-        // Reset if more than 1 hour has passed
         if (
           status.lastUsed &&
           now - status.lastUsed.getTime() > 60 * 60 * 1000
@@ -302,7 +294,6 @@ class GlobalKeyPool {
     }
   }
 
-  // Get key statistics
   getStats() {
     const stats = {
       total: this.allKeys.length,
@@ -454,13 +445,11 @@ class ScraperManager {
     this.apiKeys = [];
     this.keyGroups = [];
     this.initialized = false;
-    this.maxConcurrentScrapers = 15; // Max parallel scrapers
+    this.maxConcurrentScrapers = 15;
     this.systemLogger = new Logger("manager");
   }
 
-  // Initialize with API keys
   async initialize() {
-    // Load all API keys from environment (supporting up to 150 keys)
     this.apiKeys = [
       process.env.YOUTUBE_API_KEY_1,
       process.env.YOUTUBE_API_KEY_2,
@@ -562,56 +551,6 @@ class ScraperManager {
       process.env.YOUTUBE_API_KEY_98,
       process.env.YOUTUBE_API_KEY_99,
       process.env.YOUTUBE_API_KEY_100,
-      process.env.YOUTUBE_API_KEY_101,
-      process.env.YOUTUBE_API_KEY_102,
-      process.env.YOUTUBE_API_KEY_103,
-      process.env.YOUTUBE_API_KEY_104,
-      process.env.YOUTUBE_API_KEY_105,
-      process.env.YOUTUBE_API_KEY_106,
-      process.env.YOUTUBE_API_KEY_107,
-      process.env.YOUTUBE_API_KEY_108,
-      process.env.YOUTUBE_API_KEY_109,
-      process.env.YOUTUBE_API_KEY_110,
-      process.env.YOUTUBE_API_KEY_111,
-      process.env.YOUTUBE_API_KEY_112,
-      process.env.YOUTUBE_API_KEY_113,
-      process.env.YOUTUBE_API_KEY_114,
-      process.env.YOUTUBE_API_KEY_115,
-      process.env.YOUTUBE_API_KEY_116,
-      process.env.YOUTUBE_API_KEY_117,
-      process.env.YOUTUBE_API_KEY_118,
-      process.env.YOUTUBE_API_KEY_119,
-      process.env.YOUTUBE_API_KEY_120,
-      process.env.YOUTUBE_API_KEY_121,
-      process.env.YOUTUBE_API_KEY_122,
-      process.env.YOUTUBE_API_KEY_123,
-      process.env.YOUTUBE_API_KEY_124,
-      process.env.YOUTUBE_API_KEY_125,
-      process.env.YOUTUBE_API_KEY_126,
-      process.env.YOUTUBE_API_KEY_127,
-      process.env.YOUTUBE_API_KEY_128,
-      process.env.YOUTUBE_API_KEY_129,
-      process.env.YOUTUBE_API_KEY_130,
-      process.env.YOUTUBE_API_KEY_131,
-      process.env.YOUTUBE_API_KEY_132,
-      process.env.YOUTUBE_API_KEY_133,
-      process.env.YOUTUBE_API_KEY_134,
-      process.env.YOUTUBE_API_KEY_135,
-      process.env.YOUTUBE_API_KEY_136,
-      process.env.YOUTUBE_API_KEY_137,
-      process.env.YOUTUBE_API_KEY_138,
-      process.env.YOUTUBE_API_KEY_139,
-      process.env.YOUTUBE_API_KEY_140,
-      process.env.YOUTUBE_API_KEY_141,
-      process.env.YOUTUBE_API_KEY_142,
-      process.env.YOUTUBE_API_KEY_143,
-      process.env.YOUTUBE_API_KEY_144,
-      process.env.YOUTUBE_API_KEY_145,
-      process.env.YOUTUBE_API_KEY_146,
-      process.env.YOUTUBE_API_KEY_147,
-      process.env.YOUTUBE_API_KEY_148,
-      process.env.YOUTUBE_API_KEY_149,
-      process.env.YOUTUBE_API_KEY_150,
     ].filter(
       (key) => key && key !== "YOUR_API_KEY_1" && key !== "YOUR_API_KEY_2",
     );
@@ -621,17 +560,12 @@ class ScraperManager {
       process.exit(1);
     }
 
-    // Initialize global key pool
     this.keyPool.initialize(this.apiKeys);
-
     this.systemLogger.success(
       `✅ Loaded ${this.apiKeys.length} YouTube API keys`,
     );
 
-    // Create preferred key groups (5 keys per scraper ideally)
     await this.createKeyGroups();
-
-    // Load existing scrapers or create default ones
     await this.loadOrCreateScrapers();
 
     this.initialized = true;
@@ -639,14 +573,10 @@ class ScraperManager {
       `🚀 Scraper Manager initialized with ${this.scrapers.size} scrapers`,
     );
 
-    // Start task assignment loop
     this.startAssignmentLoop();
-
-    // Start health check loop
     this.startHealthCheckLoop();
   }
 
-  // Create preferred key groups
   async createKeyGroups() {
     const keysPerScraper = Math.min(
       5,
@@ -666,7 +596,6 @@ class ScraperManager {
     );
   }
 
-  // Load existing scrapers or create default ones
   async loadOrCreateScrapers() {
     const existingScrapers = await ScraperInstance.find();
 
@@ -689,7 +618,6 @@ class ScraperManager {
         `📋 Loaded ${existingScrapers.length} existing scrapers`,
       );
     } else {
-      // Create scrapers based on key groups
       for (let i = 0; i < this.keyGroups.length; i++) {
         await this.createScraper(`Scraper-${i + 1}`, this.keyGroups[i]);
       }
@@ -699,7 +627,6 @@ class ScraperManager {
     }
   }
 
-  // Create a new scraper instance
   async createScraper(name, preferredKeyIndices) {
     const instanceId = uuidv4();
 
@@ -729,17 +656,14 @@ class ScraperManager {
     return scraper;
   }
 
-  // Get available key from global pool
   getKeyForScraper(scraperId, preferredIndices) {
     return this.keyPool.getAvailableKey(scraperId, preferredIndices);
   }
 
-  // Release key back to pool
   releaseKey(index, scraperId, quotaExceeded = false, failed = false) {
     this.keyPool.releaseKey(index, scraperId, quotaExceeded, failed);
   }
 
-  // Get available scraper
   getAvailableScraper() {
     for (const [instanceId, scraper] of this.scrapers) {
       if (scraper.isAvailable()) {
@@ -749,7 +673,6 @@ class ScraperManager {
     return null;
   }
 
-  // Assign task to scraper
   async assignTask(task) {
     const scraper = this.getAvailableScraper();
 
@@ -771,7 +694,6 @@ class ScraperManager {
     return true;
   }
 
-  // Start task assignment loop
   startAssignmentLoop() {
     setInterval(async () => {
       try {
@@ -796,10 +718,9 @@ class ScraperManager {
           error: error.message,
         });
       }
-    }, 3000); // Check every 3 seconds
+    }, 3000);
   }
 
-  // Start health check loop
   startHealthCheckLoop() {
     setInterval(async () => {
       try {
@@ -811,7 +732,6 @@ class ScraperManager {
               Date.now() - new Date(health.lastActive).getTime();
 
             if (inactiveTime > 10 * 60 * 1000) {
-              // 10 minutes
               await this.systemLogger.warning(
                 `⚠️ Scraper ${instanceId} appears stuck, resetting`,
               );
@@ -832,7 +752,6 @@ class ScraperManager {
     }, 30000);
   }
 
-  // Handle task completion
   async handleTaskCompletion(taskId, scraperId, stats) {
     const task = await Queue.findById(taskId);
     if (!task) return;
@@ -853,7 +772,6 @@ class ScraperManager {
     );
   }
 
-  // Handle task failure
   async handleTaskFailure(taskId, scraperId, error) {
     const task = await Queue.findById(taskId);
     if (!task) return;
@@ -883,7 +801,6 @@ class ScraperManager {
     );
   }
 
-  // Get manager status
   async getStatus() {
     const scrapers = [];
     for (const [instanceId, scraper] of this.scrapers) {
@@ -908,7 +825,6 @@ class ScraperManager {
     };
   }
 
-  // Stop a scraper
   async stopScraper(instanceId) {
     const scraper = this.scrapers.get(instanceId);
     if (!scraper) return false;
@@ -920,7 +836,6 @@ class ScraperManager {
     return true;
   }
 
-  // Start a stopped scraper
   async startScraper(instanceId) {
     const scraper = this.scrapers.get(instanceId);
     if (!scraper) return false;
@@ -948,10 +863,22 @@ class ScraperWorker {
     this.emailsFound = 0;
     this.logger = new Logger(`scraper-${instanceId.substring(0, 8)}`);
 
-    // Current key being used
     this.currentKeyIndex = null;
     this.currentKey = null;
     this.consecutiveFails = 0;
+    
+    // Adaptive scraping strategy variables
+    this.consecutiveSkips = 0;
+    this.currentStrategy = "search";
+    this.strategies = [
+      "search",
+      "related_videos",
+      "popular_channels",
+      "comments",
+      "playlists",
+      "trending",
+    ];
+    this.strategyIndex = 0;
   }
 
   isAvailable() {
@@ -963,6 +890,9 @@ class ScraperWorker {
     this.status = "busy";
     this.lastActive = new Date();
     this.consecutiveFails = 0;
+    this.consecutiveSkips = 0;
+    this.currentStrategy = "search";
+    this.strategyIndex = 0;
 
     await ScraperInstance.updateOne(
       { instanceId: this.instanceId },
@@ -973,13 +903,11 @@ class ScraperWorker {
       },
     );
 
-    // Process task in background
     this.processTask(task).catch((error) => {
       this.logger.error("Error processing task", { error: error.message });
     });
   }
 
-  // Get a key from global pool with retry
   async getKey() {
     const maxAttempts = 10;
 
@@ -1005,7 +933,6 @@ class ScraperWorker {
         return keyInfo.key;
       }
 
-      // No keys available, wait and retry
       if (attempt < maxAttempts) {
         await this.logger.warning(
           `⏳ No keys available, waiting (${attempt}/${maxAttempts})`,
@@ -1019,7 +946,6 @@ class ScraperWorker {
     throw new Error("No API keys available after multiple attempts");
   }
 
-  // Release current key
   releaseKey(quotaExceeded = false, failed = false) {
     if (this.currentKeyIndex !== null) {
       this.manager.releaseKey(
@@ -1040,12 +966,8 @@ class ScraperWorker {
     }
   }
 
-  // Get YouTube client with automatic key management
   async getYouTubeClient() {
-    // Release previous key if any
     this.releaseKey(false, this.consecutiveFails > 3);
-
-    // Get new key
     const key = await this.getKey();
 
     return google.youtube({
@@ -1069,10 +991,8 @@ class ScraperWorker {
       task.startedAt = new Date();
       await task.save();
 
-      // Process the task
       const stats = await this.scrapeChannels(task);
 
-      // Release key
       this.releaseKey(false, false);
 
       await this.manager.handleTaskCompletion(task._id, this.instanceId, stats);
@@ -1100,7 +1020,6 @@ class ScraperWorker {
     } catch (error) {
       this.consecutiveFails++;
 
-      // Release key with failure flag
       this.releaseKey(false, true);
 
       await this.manager.handleTaskFailure(task._id, this.instanceId, error);
@@ -1119,7 +1038,529 @@ class ScraperWorker {
     }
   }
 
-  // Main scraping function - SIRF EMAILS WALE CHANNELS SAVE HONGE
+  // Enhanced email extraction with better domain validation
+  extractEmails(text) {
+    if (!text || typeof text !== "string") return [];
+
+    // Clean and normalize text first
+    let normalizedText = text
+      .replace(/\[at\]|\(at\)|\{at\}|<at>|\bat\b/gi, "@")
+      .replace(/\[dot\]|\(dot\)|\{dot\}|<dot>|\bdot\b/gi, ".")
+      .replace(/\s+@\s+/g, "@")
+      .replace(/\s+\.\s+/g, ".")
+      .replace(/&#64;/g, "@")
+      .replace(/&#46;/g, ".")
+      .replace(/e-?mail|email|mail|contact|📧|✉️/gi, " ");
+
+    // Improved email regex pattern with domain validation
+    const emailPattern = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+    
+    let emails = [];
+    let matches;
+    
+    while ((matches = emailPattern.exec(normalizedText)) !== null) {
+      let email = matches[0].toLowerCase().trim();
+      
+      // Validate email has proper domain
+      if (email.includes("@") && email.includes(".")) {
+        const parts = email.split("@");
+        if (parts.length === 2) {
+          const localPart = parts[0];
+          const domain = parts[1];
+          
+          // Check if domain has at least 2 parts and TLD is valid length
+          const domainParts = domain.split(".");
+          if (domainParts.length >= 2 && domainParts[domainParts.length - 1].length >= 2) {
+            // Check for common valid TLDs or custom domains
+            const validTLDs = ['com', 'org', 'net', 'edu', 'gov', 'io', 'co', 'uk', 'de', 'fr', 'in', 'au', 'ca'];
+            const tld = domainParts[domainParts.length - 1];
+            
+            // Accept if domain has proper structure (not just single char TLD like "g.com")
+            if (domainParts[domainParts.length - 2].length >= 2 && tld.length >= 2) {
+              emails.push(email);
+            }
+          }
+        }
+      }
+    }
+    
+    // Remove duplicates
+    emails = [...new Set(emails)];
+    
+    // Filter out obviously invalid emails
+    emails = emails.filter(email => {
+      // Check if domain has at least 3 characters before dot (not like "g.com")
+      const domainPart = email.split("@")[1];
+      if (domainPart) {
+        const beforeDot = domainPart.split(".")[0];
+        return beforeDot.length >= 2; // At least 2 chars before dot
+      }
+      return false;
+    });
+    
+    return emails;
+  }
+
+  // Enhanced phone extraction
+  extractPhoneNumbers(text) {
+    if (!text || typeof text !== "string") return [];
+
+    const patterns = [
+      /\+\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g,
+      /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g,
+      /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/g,
+    ];
+
+    let allPhones = [];
+
+    for (const pattern of patterns) {
+      const matches = text.match(pattern) || [];
+      allPhones = [...allPhones, ...matches];
+    }
+
+    return [...new Set(allPhones)];
+  }
+
+  extractSocialLinks(text) {
+    if (!text) return [];
+
+    const patterns = [
+      {
+        platform: "twitter",
+        regex:
+          /(?:https?:\/\/)?(?:www\.)?(?:twitter\.com|x\.com)\/[a-zA-Z0-9_]+/gi,
+      },
+      {
+        platform: "instagram",
+        regex: /(?:https?:\/\/)?(?:www\.)?instagram\.com\/[a-zA-Z0-9_.]+/gi,
+      },
+      {
+        platform: "facebook",
+        regex: /(?:https?:\/\/)?(?:www\.)?facebook\.com\/[a-zA-Z0-9.]+/gi,
+      },
+      {
+        platform: "linkedin",
+        regex:
+          /(?:https?:\/\/)?(?:www\.)?linkedin\.com\/(company|in)\/[a-zA-Z0-9_-]+/gi,
+      },
+      {
+        platform: "tiktok",
+        regex: /(?:https?:\/\/)?(?:www\.)?tiktok\.com\/@[a-zA-Z0-9_.]+/gi,
+      },
+    ];
+
+    const links = [];
+
+    for (const pattern of patterns) {
+      const matches = text.matchAll(pattern.regex);
+      for (const match of matches) {
+        links.push({
+          platform: pattern.platform,
+          url: match[0],
+        });
+      }
+    }
+
+    return links;
+  }
+
+  extractWebsite(text) {
+    if (!text) return null;
+
+    const urlRegex =
+      /(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?)(?:\/[^\s]*)?/g;
+    const matches = text.match(urlRegex);
+
+    if (!matches) return null;
+
+    const blacklist = [
+      "youtube.com",
+      "instagram.com",
+      "twitter.com",
+      "facebook.com",
+      "tiktok.com",
+    ];
+
+    for (const match of matches) {
+      const url = match.startsWith("http") ? match : "https://" + match;
+      try {
+        const domain = new URL(url).hostname.replace("www.", "");
+        if (!blacklist.includes(domain) && domain.includes(".")) {
+          return url;
+        }
+      } catch {}
+    }
+
+    return null;
+  }
+
+  async scrapeWebsiteForContacts(websiteUrl) {
+    if (!websiteUrl) return { emails: [], phones: [] };
+
+    try {
+      const response = await axios.get(websiteUrl, {
+        timeout: 5000,
+        headers: { "User-Agent": "Mozilla/5.0" },
+      });
+
+      const text = response.data;
+      const emails = this.extractEmails(text);
+      const phones = this.extractPhoneNumbers(text);
+
+      return { emails, phones };
+    } catch (error) {
+      return { emails: [], phones: [] };
+    }
+  }
+
+  // Adaptive strategy changer
+  async changeStrategy() {
+    this.strategyIndex = (this.strategyIndex + 1) % this.strategies.length;
+    this.currentStrategy = this.strategies[this.strategyIndex];
+    
+    await this.logger.warning(
+      `🔄 Changing scraping strategy due to ${this.consecutiveSkips} consecutive skips`,
+      { newStrategy: this.currentStrategy },
+      this.currentTask?._id,
+    );
+    
+    this.consecutiveSkips = 0;
+    
+    // Add delay to let API quota recover
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+
+  // Enhanced channel processing with better email validation
+  async processChannel(channelData, sourceInfo = {}, taskId = null) {
+    const channelId = channelData.id || channelData.channelId;
+
+    const existing = await Channel.findOne({ channelId });
+    if (existing) {
+      if (existing.emails && existing.emails.length > 0) {
+        const snippet = channelData.snippet;
+        const description = snippet.description || "";
+        const newEmails = this.extractEmails(description);
+
+        if (newEmails.length > 0) {
+          const validNewEmails = newEmails.filter(email => {
+            const domain = email.split("@")[1];
+            return domain && domain.split(".")[0].length >= 2;
+          });
+          
+          if (validNewEmails.length > 0) {
+            const allEmails = [...new Set([...existing.emails, ...validNewEmails])];
+            existing.emails = allEmails;
+            existing.hasEmails = true;
+            existing.lastUpdated = new Date();
+            existing.scrapedBy = this.instanceId;
+            await existing.save();
+
+            await this.logger.debug(
+              `Updated existing channel with new emails`,
+              {
+                channelId,
+                newEmails: validNewEmails.length,
+                totalEmails: allEmails.length,
+              },
+              taskId,
+              channelId,
+            );
+
+            return {
+              saved: true,
+              updated: true,
+              channel: existing,
+              emails: validNewEmails.length,
+            };
+          }
+        }
+      }
+      return { saved: false, skipped: true, reason: "exists" };
+    }
+
+    try {
+      const snippet = channelData.snippet;
+      const statistics = channelData.statistics || {};
+
+      const subscriberCount = parseInt(statistics.subscriberCount || 0);
+      const videoCount = parseInt(statistics.videoCount || 0);
+      const viewCount = parseInt(statistics.viewCount || 0);
+
+      const description = snippet.description || "";
+
+      // Extract and validate emails
+      let emails = this.extractEmails(description);
+      
+      // Validate emails have proper domains
+      emails = emails.filter(email => {
+        const domain = email.split("@")[1];
+        if (!domain) return false;
+        const domainParts = domain.split(".");
+        return domainParts[0].length >= 2 && domainParts[domainParts.length - 1].length >= 2;
+      });
+
+      if (emails.length === 0) {
+        this.consecutiveSkips++;
+        
+        await this.logger.debug(
+          `⏭️ Skipping - no valid emails found (${this.consecutiveSkips}/5)`,
+          {
+            channelId,
+            title: snippet.title,
+            consecutiveSkips: this.consecutiveSkips,
+          },
+          taskId,
+          channelId,
+        );
+        
+        // Change strategy if 5 consecutive skips
+        if (this.consecutiveSkips >= 5) {
+          await this.changeStrategy();
+        }
+        
+        return { saved: false, skipped: true, reason: "no_emails" };
+      }
+
+      // Reset consecutive skips counter when we find emails
+      this.consecutiveSkips = 0;
+
+      let phones = this.extractPhoneNumbers(description);
+      let socialLinks = this.extractSocialLinks(description);
+      let websiteUrl = this.extractWebsite(description);
+
+      if (websiteUrl) {
+        const websiteData = await this.scrapeWebsiteForContacts(websiteUrl);
+        const validWebsiteEmails = websiteData.emails.filter(email => {
+          const domain = email.split("@")[1];
+          return domain && domain.split(".")[0].length >= 2;
+        });
+        emails = [...new Set([...emails, ...validWebsiteEmails])];
+        phones = [...new Set([...phones, ...websiteData.phones])];
+      }
+
+      const bioLinks = socialLinks.filter(
+        (s) => s.url.includes("linktr.ee") || s.url.includes("bio.link"),
+      );
+
+      for (const bioLink of bioLinks) {
+        try {
+          const bioResponse = await axios.get(bioLink.url, { timeout: 5000 });
+          const bioEmails = this.extractEmails(bioResponse.data).filter(email => {
+            const domain = email.split("@")[1];
+            return domain && domain.split(".")[0].length >= 2;
+          });
+          emails = [...new Set([...emails, ...bioEmails])];
+        } catch (e) {}
+      }
+
+      const engagementRate =
+        videoCount > 0 ? viewCount / videoCount / (subscriberCount || 1) : 0;
+
+      let qualityScore = 0;
+      if (subscriberCount >= 100000) qualityScore += 30;
+      else if (subscriberCount >= 50000) qualityScore += 25;
+      else if (subscriberCount >= 10000) qualityScore += 20;
+      else if (subscriberCount >= 1000) qualityScore += 10;
+
+      if (videoCount >= 500) qualityScore += 20;
+      else if (videoCount >= 200) qualityScore += 15;
+      else if (videoCount >= 100) qualityScore += 10;
+
+      if (engagementRate >= 0.5) qualityScore += 30;
+      else if (engagementRate >= 0.3) qualityScore += 20;
+      else if (engagementRate >= 0.1) qualityScore += 10;
+
+      qualityScore += Math.min(emails.length * 5, 25);
+
+      const channel = new Channel({
+        channelId,
+        title: snippet.title,
+        description: description.substring(0, 500),
+        subscriberCount,
+        videoCount,
+        viewCount,
+        publishedAt: new Date(snippet.publishedAt),
+        country: snippet.country,
+        customUrl: snippet.customUrl,
+        thumbnailUrl: snippet.thumbnails?.default?.url,
+        keywords: sourceInfo.keywords || [],
+        emails,
+        phoneNumbers: phones,
+        socialLinks,
+        websiteUrl,
+        contactInfo: {
+          hasEmail: true,
+          hasPhone: phones.length > 0,
+          hasSocial: socialLinks.length > 0,
+          hasWebsite: !!websiteUrl,
+        },
+        engagement: {
+          avgViewsPerVideo: videoCount > 0 ? viewCount / videoCount : 0,
+          engagementRate,
+        },
+        qualityScore,
+        lastUpdated: new Date(),
+        hasEmails: true,
+        savedReason: "emails",
+        sourceType: sourceInfo.sourceType || "search",
+        discoveryDepth: sourceInfo.discoveryDepth || 0,
+        scrapedBy: this.instanceId,
+      });
+
+      await channel.save();
+
+      await this.logger.success(
+        `✅ SAVED: "${snippet.title}" with ${emails.length} valid emails`,
+        {
+          emails: emails.length,
+          subscribers: subscriberCount,
+          qualityScore,
+          sampleEmail: emails[0],
+        },
+        taskId,
+        channelId,
+      );
+
+      return {
+        saved: true,
+        channel,
+        emails: emails.length,
+        phones: phones.length,
+        qualityScore,
+      };
+    } catch (error) {
+      await this.logger.error(
+        "Error processing channel",
+        { channelId, error: error.message },
+        taskId,
+      );
+      return { saved: false, error: error.message };
+    }
+  }
+
+  async getRelatedChannels(
+    youtube,
+    channelId,
+    depth = 0,
+    maxDepth = 2,
+    taskId = null,
+  ) {
+    if (depth >= maxDepth) return [];
+
+    const relatedChannels = [];
+
+    try {
+      const videosResponse = await youtube.search.list({
+        part: "snippet",
+        channelId: channelId,
+        type: "video",
+        maxResults: 5,
+        order: "date",
+      });
+
+      if (!videosResponse.data.items) return [];
+
+      for (const video of videosResponse.data.items) {
+        const videoId = video.id.videoId;
+
+        try {
+          const commentsResponse = await youtube.commentThreads.list({
+            part: "snippet",
+            videoId: videoId,
+            maxResults: 50,
+          });
+
+          if (commentsResponse.data.items) {
+            for (const comment of commentsResponse.data.items) {
+              const authorChannelId =
+                comment.snippet.topLevelComment.snippet.authorChannelId?.value;
+              if (authorChannelId && authorChannelId !== channelId) {
+                relatedChannels.push({
+                  channelId: authorChannelId,
+                  sourceType: "comments",
+                  sourceChannel: channelId,
+                  discoveryDepth: depth + 1,
+                });
+              }
+            }
+          }
+        } catch (e) {}
+
+        try {
+          const relatedResponse = await youtube.search.list({
+            part: "snippet",
+            relatedToVideoId: videoId,
+            type: "video",
+            maxResults: 20,
+          });
+
+          if (relatedResponse.data.items) {
+            for (const related of relatedResponse.data.items) {
+              if (related.snippet.channelId !== channelId) {
+                relatedChannels.push({
+                  channelId: related.snippet.channelId,
+                  sourceType: "related",
+                  sourceChannel: channelId,
+                  discoveryDepth: depth + 1,
+                });
+              }
+            }
+          }
+        } catch (e) {}
+      }
+    } catch (error) {
+      await this.logger.error(
+        "Error getting related channels",
+        { channelId, error: error.message },
+        taskId,
+      );
+    }
+
+    const unique = {};
+    relatedChannels.forEach((c) => (unique[c.channelId] = c));
+
+    return Object.values(unique);
+  }
+
+  async enrichKeywords(baseKeywords) {
+    const enriched = new Set();
+
+    for (const keyword of baseKeywords) {
+      enriched.add(keyword);
+
+      try {
+        const autocompleteUrls = [
+          `http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(keyword)}`,
+          `http://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(keyword)}`,
+        ];
+
+        for (const url of autocompleteUrls) {
+          try {
+            const response = await axios.get(url, { timeout: 5000 });
+            if (response.data && Array.isArray(response.data[1])) {
+              response.data[1].forEach((suggestion) => {
+                enriched.add(suggestion);
+              });
+            }
+          } catch (e) {}
+        }
+
+        enriched.add(keyword + " tutorial");
+        enriched.add(keyword + " review");
+        enriched.add(keyword + " how to");
+        enriched.add("learn " + keyword);
+      } catch (error) {
+        await this.logger.error("Error enriching keyword", {
+          keyword,
+          error: error.message,
+        });
+      }
+    }
+
+    return Array.from(enriched).slice(0, 50);
+  }
+
+  // Enhanced main scraping function with adaptive strategies
   async scrapeChannels(task) {
     const options = task.data;
     const keywords = options.keywords;
@@ -1142,7 +1583,6 @@ class ScraperWorker {
     let relatedChannelsFound = 0;
     let totalQualityScore = 0;
 
-    // Enrich keywords if enabled
     let searchKeywords = keywords;
     if (shouldEnrich) {
       await this.logger.info(
@@ -1165,7 +1605,7 @@ class ScraperWorker {
     const processedChannels = new Set();
 
     await this.logger.info(
-      "🚀 Starting scrape - SIRF EMAILS WALE CHANNELS SAVE HONGE",
+      "🚀 Starting scrape - SIRF VALID EMAILS WALE CHANNELS SAVE HONGE",
       {
         keywords: searchKeywords.length,
         maxResults,
@@ -1173,124 +1613,164 @@ class ScraperWorker {
         minSubscribers,
         includeRelated,
         relatedDepth,
+        currentStrategy: this.currentStrategy,
       },
       taskId,
     );
 
-    // Phase 1: Search for channels
-    for (const keyword of searchKeywords) {
-      if (savedChannels >= maxResults) break;
+    // Adaptive search based on current strategy
+    if (this.currentStrategy === "search") {
+      for (const keyword of searchKeywords) {
+        if (savedChannels >= maxResults) break;
 
-      let pageToken = null;
-      let pageCount = 0;
+        let pageToken = null;
+        let pageCount = 0;
 
-      while (savedChannels < maxResults && pageCount < 10) {
-        try {
-          const youtube = await this.getYouTubeClient();
+        while (savedChannels < maxResults && pageCount < 10) {
+          try {
+            const youtube = await this.getYouTubeClient();
 
-          const searchParams = {
-            part: "snippet",
-            q: keyword,
-            type: "channel",
-            maxResults: 50,
-            order: "relevance",
-            pageToken: pageToken,
-          };
+            const searchParams = {
+              part: "snippet",
+              q: keyword,
+              type: "channel",
+              maxResults: 50,
+              order: "relevance",
+              pageToken: pageToken,
+            };
 
-          if (countryCode) {
-            searchParams.regionCode = countryCode;
-          }
-
-          const searchResponse = await youtube.search.list(searchParams);
-          pageCount++;
-
-          if (
-            !searchResponse.data.items ||
-            searchResponse.data.items.length === 0
-          )
-            break;
-
-          for (const item of searchResponse.data.items) {
-            if (savedChannels >= maxResults) break;
-
-            const channelId = item.snippet.channelId;
-
-            if (processedChannels.has(channelId)) {
-              skippedChannels++;
-              continue;
+            if (countryCode) {
+              searchParams.regionCode = countryCode;
             }
 
-            processedChannels.add(channelId);
-            totalChannels++;
+            const searchResponse = await youtube.search.list(searchParams);
+            pageCount++;
 
-            // Get full channel details
-            const channelResponse = await youtube.channels.list({
-              part: "snippet,statistics",
-              id: channelId,
-            });
+            if (
+              !searchResponse.data.items ||
+              searchResponse.data.items.length === 0
+            )
+              break;
 
-            const channelData = channelResponse.data.items?.[0];
-            if (!channelData) {
-              skippedChannels++;
-              continue;
+            for (const item of searchResponse.data.items) {
+              if (savedChannels >= maxResults) break;
+
+              const channelId = item.snippet.channelId;
+
+              if (processedChannels.has(channelId)) {
+                skippedChannels++;
+                continue;
+              }
+
+              processedChannels.add(channelId);
+              totalChannels++;
+
+              const channelResponse = await youtube.channels.list({
+                part: "snippet,statistics",
+                id: channelId,
+              });
+
+              const channelData = channelResponse.data.items?.[0];
+              if (!channelData) {
+                skippedChannels++;
+                continue;
+              }
+
+              const result = await this.processChannel(
+                channelData,
+                {
+                  keywords: [keyword],
+                  sourceType: "search",
+                  discoveryDepth: 0,
+                },
+                taskId,
+              );
+
+              if (result.saved) {
+                savedChannels++;
+                totalEmailsFound += result.emails || 0;
+                totalPhonesFound += result.phones || 0;
+                totalQualityScore += result.qualityScore || 0;
+
+                if (
+                  includeRelated &&
+                  result.channel?.subscriberCount >= minSubscribers
+                ) {
+                  channelQueue.push({
+                    channelId,
+                    depth: 0,
+                    sourceType: "search",
+                  });
+                }
+              } else {
+                skippedChannels++;
+              }
+
+              await new Promise((resolve) => setTimeout(resolve, 50));
             }
 
-            const result = await this.processChannel(
-              channelData,
-              {
-                keywords: [keyword],
-                sourceType: "search",
-                discoveryDepth: 0,
-              },
+            pageToken = searchResponse.data.nextPageToken;
+            if (!pageToken) break;
+          } catch (error) {
+            await this.logger.error(
+              `Error searching keyword "${keyword}"`,
+              { error: error.message },
               taskId,
             );
 
-            if (result.saved) {
-              savedChannels++;
-              totalEmailsFound += result.emails || 0;
-              totalPhonesFound += result.phones || 0;
-              totalQualityScore += result.qualityScore || 0;
-
-              if (
-                includeRelated &&
-                result.channel?.subscriberCount >= minSubscribers
-              ) {
-                channelQueue.push({
-                  channelId,
-                  depth: 0,
-                  sourceType: "search",
-                });
-              }
+            if (error.code === 403) {
+              this.releaseKey(true, false);
             } else {
-              skippedChannels++;
+              this.releaseKey(false, true);
             }
 
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 2000));
           }
-
-          pageToken = searchResponse.data.nextPageToken;
-          if (!pageToken) break;
+        }
+      }
+    } else if (this.currentStrategy === "popular_channels") {
+      // Get popular channels in specific categories
+      const categories = ['Music', 'Gaming', 'Education', 'Tech', 'Comedy', 'Sports'];
+      for (const category of categories) {
+        if (savedChannels >= maxResults) break;
+        
+        try {
+          const youtube = await this.getYouTubeClient();
+          const popularResponse = await youtube.search.list({
+            part: "snippet",
+            q: category,
+            type: "channel",
+            maxResults: 50,
+            order: "viewCount",
+          });
+          
+          // Process popular channels
+          for (const item of popularResponse.data.items || []) {
+            if (savedChannels >= maxResults) break;
+            const channelId = item.snippet.channelId;
+            if (!processedChannels.has(channelId)) {
+              processedChannels.add(channelId);
+              const channelResponse = await youtube.channels.list({
+                part: "snippet,statistics",
+                id: channelId,
+              });
+              const channelData = channelResponse.data.items?.[0];
+              if (channelData) {
+                const result = await this.processChannel(channelData, { sourceType: "popular" }, taskId);
+                if (result.saved) {
+                  savedChannels++;
+                  totalEmailsFound += result.emails || 0;
+                }
+              }
+            }
+          }
         } catch (error) {
-          await this.logger.error(
-            `Error searching keyword "${keyword}"`,
-            { error: error.message },
-            taskId,
-          );
-
-          if (error.code === 403) {
-            // Quota exceeded, release key with quota flag
-            this.releaseKey(true, false);
-          } else {
-            // Other error, release with failure flag
-            this.releaseKey(false, true);
-          }
-
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          await this.logger.error("Error getting popular channels", { error: error.message }, taskId);
         }
       }
     }
 
-    // Phase 2: Discover related channels
+    // Related channels discovery
     if (includeRelated && channelQueue.length > 0) {
       await this.logger.info(
         "🔗 Discovering related channels",
@@ -1401,534 +1881,6 @@ class ScraperWorker {
     return stats;
   }
 
-  // Enrich keywords
-  async enrichKeywords(baseKeywords) {
-    const enriched = new Set();
-
-    for (const keyword of baseKeywords) {
-      enriched.add(keyword);
-
-      try {
-        const autocompleteUrls = [
-          `http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(keyword)}`,
-          `http://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(keyword)}`,
-        ];
-
-        for (const url of autocompleteUrls) {
-          try {
-            const response = await axios.get(url, { timeout: 5000 });
-            if (response.data && Array.isArray(response.data[1])) {
-              response.data[1].forEach((suggestion) => {
-                enriched.add(suggestion);
-              });
-            }
-          } catch (e) {}
-        }
-
-        // Add common variations
-        enriched.add(keyword + " tutorial");
-        enriched.add(keyword + " review");
-        enriched.add(keyword + " how to");
-        enriched.add("learn " + keyword);
-      } catch (error) {
-        await this.logger.error("Error enriching keyword", {
-          keyword,
-          error: error.message,
-        });
-      }
-    }
-
-    return Array.from(enriched).slice(0, 50);
-  }
-
-  // Process single channel - SIRF EMAILS HOGE TO SAVE KAREGA
-  async processChannel(channelData, sourceInfo = {}, taskId = null) {
-    const channelId = channelData.id || channelData.channelId;
-
-    // Check if already exists
-    const existing = await Channel.findOne({ channelId });
-    if (existing) {
-      if (existing.emails && existing.emails.length > 0) {
-        const snippet = channelData.snippet;
-        const description = snippet.description || "";
-        const newEmails = this.extractEmails(description);
-
-        if (newEmails.length > 0) {
-          const allEmails = [...new Set([...existing.emails, ...newEmails])];
-          existing.emails = allEmails;
-          existing.hasEmails = true;
-          existing.lastUpdated = new Date();
-          existing.scrapedBy = this.instanceId;
-          await existing.save();
-
-          await this.logger.debug(
-            `Updated existing channel with new emails`,
-            {
-              channelId,
-              newEmails: newEmails.length,
-              totalEmails: allEmails.length,
-            },
-            taskId,
-            channelId,
-          );
-
-          return {
-            saved: true,
-            updated: true,
-            channel: existing,
-            emails: newEmails.length,
-          };
-        }
-      }
-      return { saved: false, skipped: true, reason: "exists" };
-    }
-
-    try {
-      const snippet = channelData.snippet;
-      const statistics = channelData.statistics || {};
-
-      const subscriberCount = parseInt(statistics.subscriberCount || 0);
-      const videoCount = parseInt(statistics.videoCount || 0);
-      const viewCount = parseInt(statistics.viewCount || 0);
-
-      const description = snippet.description || "";
-
-      // SIRF EMAILS EXTRACT KARO
-      let emails = this.extractEmails(description);
-
-      // Agar emails nahi mile to skip
-      if (emails.length === 0) {
-        await this.logger.debug(
-          `⏭️ Skipping - no emails found`,
-          {
-            channelId,
-            title: snippet.title,
-          },
-          taskId,
-          channelId,
-        );
-
-        return { saved: false, skipped: true, reason: "no_emails" };
-      }
-
-      // Phones bhi nikaalo (optional)
-      let phones = this.extractPhoneNumbers(description);
-      let socialLinks = this.extractSocialLinks(description);
-      let websiteUrl = this.extractWebsite(description);
-
-      // Website se bhi emails dhundho
-      if (websiteUrl) {
-        const websiteData = await this.scrapeWebsiteForContacts(websiteUrl);
-        emails = [...new Set([...emails, ...websiteData.emails])];
-        phones = [...new Set([...phones, ...websiteData.phones])];
-      }
-
-      // Linktree waghera se bhi emails
-      const bioLinks = socialLinks.filter(
-        (s) => s.url.includes("linktr.ee") || s.url.includes("bio.link"),
-      );
-
-      for (const bioLink of bioLinks) {
-        try {
-          const bioResponse = await axios.get(bioLink.url, { timeout: 5000 });
-          const bioEmails = this.extractEmails(bioResponse.data);
-          emails = [...new Set([...emails, ...bioEmails])];
-        } catch (e) {}
-      }
-
-      const engagementRate =
-        videoCount > 0 ? viewCount / videoCount / (subscriberCount || 1) : 0;
-
-      // Quality score calculate
-      let qualityScore = 0;
-      if (subscriberCount >= 100000) qualityScore += 30;
-      else if (subscriberCount >= 50000) qualityScore += 25;
-      else if (subscriberCount >= 10000) qualityScore += 20;
-      else if (subscriberCount >= 1000) qualityScore += 10;
-
-      if (videoCount >= 500) qualityScore += 20;
-      else if (videoCount >= 200) qualityScore += 15;
-      else if (videoCount >= 100) qualityScore += 10;
-
-      if (engagementRate >= 0.5) qualityScore += 30;
-      else if (engagementRate >= 0.3) qualityScore += 20;
-      else if (engagementRate >= 0.1) qualityScore += 10;
-
-      qualityScore += Math.min(emails.length * 5, 25); // Har email ke liye points
-
-      // Channel save karo
-      const channel = new Channel({
-        channelId,
-        title: snippet.title,
-        description: description.substring(0, 500),
-        subscriberCount,
-        videoCount,
-        viewCount,
-        publishedAt: new Date(snippet.publishedAt),
-        country: snippet.country,
-        customUrl: snippet.customUrl,
-        thumbnailUrl: snippet.thumbnails?.default?.url,
-        keywords: sourceInfo.keywords || [],
-        emails,
-        phoneNumbers: phones,
-        socialLinks,
-        websiteUrl,
-        contactInfo: {
-          hasEmail: true,
-          hasPhone: phones.length > 0,
-          hasSocial: socialLinks.length > 0,
-          hasWebsite: !!websiteUrl,
-        },
-        engagement: {
-          avgViewsPerVideo: videoCount > 0 ? viewCount / videoCount : 0,
-          engagementRate,
-        },
-        qualityScore,
-        lastUpdated: new Date(),
-        hasEmails: true,
-        savedReason: "emails",
-        sourceType: sourceInfo.sourceType || "search",
-        discoveryDepth: sourceInfo.discoveryDepth || 0,
-        scrapedBy: this.instanceId,
-      });
-
-      await channel.save();
-
-      await this.logger.success(
-        `✅ SAVED: "${snippet.title}" with ${emails.length} emails`,
-        {
-          emails: emails.length,
-          subscribers: subscriberCount,
-          qualityScore,
-        },
-        taskId,
-        channelId,
-      );
-
-      return {
-        saved: true,
-        channel,
-        emails: emails.length,
-        phones: phones.length,
-        qualityScore,
-      };
-    } catch (error) {
-      await this.logger.error(
-        "Error processing channel",
-        { channelId, error: error.message },
-        taskId,
-      );
-      return { saved: false, error: error.message };
-    }
-  }
-
-  // Get related channels
-  async getRelatedChannels(
-    youtube,
-    channelId,
-    depth = 0,
-    maxDepth = 2,
-    taskId = null,
-  ) {
-    if (depth >= maxDepth) return [];
-
-    const relatedChannels = [];
-
-    try {
-      const videosResponse = await youtube.search.list({
-        part: "snippet",
-        channelId: channelId,
-        type: "video",
-        maxResults: 5,
-        order: "date",
-      });
-
-      if (!videosResponse.data.items) return [];
-
-      for (const video of videosResponse.data.items) {
-        const videoId = video.id.videoId;
-
-        // Get commenters
-        try {
-          const commentsResponse = await youtube.commentThreads.list({
-            part: "snippet",
-            videoId: videoId,
-            maxResults: 50,
-          });
-
-          if (commentsResponse.data.items) {
-            for (const comment of commentsResponse.data.items) {
-              const authorChannelId =
-                comment.snippet.topLevelComment.snippet.authorChannelId?.value;
-              if (authorChannelId && authorChannelId !== channelId) {
-                relatedChannels.push({
-                  channelId: authorChannelId,
-                  sourceType: "comments",
-                  sourceChannel: channelId,
-                  discoveryDepth: depth + 1,
-                });
-              }
-            }
-          }
-        } catch (e) {}
-
-        // Get related videos' channels
-        try {
-          const relatedResponse = await youtube.search.list({
-            part: "snippet",
-            relatedToVideoId: videoId,
-            type: "video",
-            maxResults: 20,
-          });
-
-          if (relatedResponse.data.items) {
-            for (const related of relatedResponse.data.items) {
-              if (related.snippet.channelId !== channelId) {
-                relatedChannels.push({
-                  channelId: related.snippet.channelId,
-                  sourceType: "related",
-                  sourceChannel: channelId,
-                  discoveryDepth: depth + 1,
-                });
-              }
-            }
-          }
-        } catch (e) {}
-      }
-    } catch (error) {
-      await this.logger.error(
-        "Error getting related channels",
-        { channelId, error: error.message },
-        taskId,
-      );
-    }
-
-    // Remove duplicates
-    const unique = {};
-    relatedChannels.forEach((c) => (unique[c.channelId] = c));
-
-    return Object.values(unique);
-  }
-
-  // Email extraction function
- extractEmails(text) {
-    if (!text || typeof text !== "string") return [];
-
-    // Normalize text - fix common obfuscations
-    let normalizedText = text
-      .replace(/\[at\]|\(at\)|\{at\}|<at>|\bat\b/gi, "@")
-      .replace(/\[dot\]|\(dot\)|\{dot\}|<dot>|\bdot\b/gi, ".")
-      .replace(/\s+@\s+/g, "@")
-      .replace(/\s+\.\s+/g, ".")
-      .replace(/&#64;/g, "@")
-      .replace(/&#46;/g, ".")
-      .replace(/&commat;/g, "@")
-      .replace(/&period;/g, ".")
-      .replace(/\[at\]/gi, "@")
-      .replace(/\(at\)/gi, "@")
-      .replace(/\[dot\]/gi, ".")
-      .replace(/\(dot\)/gi, ".")
-      .replace(/ at /gi, "@")
-      .replace(/ dot /gi, ".")
-      .replace(/e-mail|email|mail|contact|📧|✉️/gi, " ");
-
-    // Improved email pattern - matches ALL valid email formats
-    const emailPatterns = [
-      // Standard email pattern
-      /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
-      
-      // Emails with spaces (common obfuscation)
-      /\b[A-Za-z0-9._%+-]+\s*@\s*[A-Za-z0-9.-]+\s*\.\s*[A-Za-z]{2,}\b/g,
-      
-      // Common business emails
-      /\b(info|contact|support|sales|hello|help|business|marketing|media|press|admin|enquiries|office|team|careers|jobs|hr|partners|sponsorship|collab|collaboration|partnership|sponsor|advertising|ads|pr|inquiry|bookings|management|director|ceo|founder|owner|manager|work|mail|email|contactus)[@\s@]+[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/gi,
-      
-      // Gmail specific pattern (fixed - now captures gmail.com properly)
-      /\b[A-Za-z0-9._%+-]+@gmail\.com\b/gi,
-      /\b[A-Za-z0-9._%+-]+@yahoo\.com\b/gi,
-      /\b[A-Za-z0-9._%+-]+@outlook\.com\b/gi,
-      /\b[A-Za-z0-9._%+-]+@hotmail\.com\b/gi,
-      /\b[A-Za-z0-9._%+-]+@protonmail\.com\b/gi,
-      /\b[A-Za-z0-9._%+-]+@icloud\.com\b/gi,
-      
-      // Pattern for emails in URLs (like mailto:)
-      /mailto:([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})/gi,
-      
-      // Pattern for emails in quotes
-      /"([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})"/gi,
-      
-      // Pattern for emails in parentheses
-      /\(([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})\)/gi,
-    ];
-
-    let allEmails = new Set();
-
-    for (const pattern of emailPatterns) {
-      const matches = normalizedText.match(pattern) || [];
-      matches.forEach((email) => {
-        // Clean up the email
-        let cleaned = email
-          .replace(/\s+/g, "")
-          .replace(/^mailto:/i, "")
-          .replace(/["()]/g, "")
-          .toLowerCase()
-          .trim();
-
-        // Validate email format
-        if (this.isValidEmail(cleaned)) {
-          allEmails.add(cleaned);
-        }
-      });
-    }
-
-    return Array.from(allEmails);
-  }
-
-  // Email validation function
-  isValidEmail(email) {
-    if (!email) return false;
-    
-    // Basic email validation
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    
-    if (!emailRegex.test(email)) return false;
-    
-    // Reject obviously fake emails
-    const invalidDomains = [
-      'example.com', 'test.com', 'domain.com', 'yourdomain.com',
-      'email.com', 'mail.com', 'address.com', 'website.com'
-    ];
-    
-    const domain = email.split('@')[1];
-    if (invalidDomains.includes(domain)) return false;
-    
-    // Check domain has at least one dot
-    if (!domain.includes('.')) return false;
-    
-    // Reject emails with consecutive dots
-    if (email.includes('..')) return false;
-    
-    // Reject emails with invalid characters
-    if (/[^a-zA-Z0-9._%+-@]/.test(email)) return false;
-    
-    return true;
-  }
-  // Phone extraction
-  extractPhoneNumbers(text) {
-    if (!text || typeof text !== "string") return [];
-
-    const patterns = [
-      /\+\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g,
-      /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g,
-      /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/g,
-    ];
-
-    let allPhones = [];
-
-    for (const pattern of patterns) {
-      const matches = text.match(pattern) || [];
-      allPhones = [...allPhones, ...matches];
-    }
-
-    return [...new Set(allPhones)];
-  }
-
-  // Social links extraction
-  extractSocialLinks(text) {
-    if (!text) return [];
-
-    const patterns = [
-      {
-        platform: "twitter",
-        regex:
-          /(?:https?:\/\/)?(?:www\.)?(?:twitter\.com|x\.com)\/[a-zA-Z0-9_]+/gi,
-      },
-      {
-        platform: "instagram",
-        regex: /(?:https?:\/\/)?(?:www\.)?instagram\.com\/[a-zA-Z0-9_.]+/gi,
-      },
-      {
-        platform: "facebook",
-        regex: /(?:https?:\/\/)?(?:www\.)?facebook\.com\/[a-zA-Z0-9.]+/gi,
-      },
-      {
-        platform: "linkedin",
-        regex:
-          /(?:https?:\/\/)?(?:www\.)?linkedin\.com\/(company|in)\/[a-zA-Z0-9_-]+/gi,
-      },
-      {
-        platform: "tiktok",
-        regex: /(?:https?:\/\/)?(?:www\.)?tiktok\.com\/@[a-zA-Z0-9_.]+/gi,
-      },
-    ];
-
-    const links = [];
-
-    for (const pattern of patterns) {
-      const matches = text.matchAll(pattern.regex);
-      for (const match of matches) {
-        links.push({
-          platform: pattern.platform,
-          url: match[0],
-        });
-      }
-    }
-
-    return links;
-  }
-
-  // Website extraction
-  extractWebsite(text) {
-    if (!text) return null;
-
-    const urlRegex =
-      /(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?)(?:\/[^\s]*)?/g;
-    const matches = text.match(urlRegex);
-
-    if (!matches) return null;
-
-    const blacklist = [
-      "youtube.com",
-      "instagram.com",
-      "twitter.com",
-      "facebook.com",
-      "tiktok.com",
-    ];
-
-    for (const match of matches) {
-      const url = match.startsWith("http") ? match : "https://" + match;
-      try {
-        const domain = new URL(url).hostname.replace("www.", "");
-        if (!blacklist.includes(domain) && domain.includes(".")) {
-          return url;
-        }
-      } catch {}
-    }
-
-    return null;
-  }
-
-  // Scrape website for contacts
-  async scrapeWebsiteForContacts(websiteUrl) {
-    if (!websiteUrl) return { emails: [], phones: [] };
-
-    try {
-      const response = await axios.get(websiteUrl, {
-        timeout: 5000,
-        headers: { "User-Agent": "Mozilla/5.0" },
-      });
-
-      const text = response.data;
-      const emails = this.extractEmails(text);
-      const phones = this.extractPhoneNumbers(text);
-
-      return { emails, phones };
-    } catch (error) {
-      return { emails: [], phones: [] };
-    }
-  }
-
-  // Reset scraper
   async reset() {
     this.logger.warning("⚠️ Resetting scraper");
 
@@ -1936,6 +1888,7 @@ class ScraperWorker {
     this.status = "idle";
     this.lastActive = new Date();
     this.consecutiveFails = 0;
+    this.consecutiveSkips = 0;
 
     if (this.currentKeyIndex !== null) {
       this.manager.releaseKey(
@@ -1958,7 +1911,6 @@ class ScraperWorker {
     );
   }
 
-  // Stop scraper
   async stop() {
     this.logger.info("🛑 Stopping scraper");
     this.status = "stopped";
@@ -1984,13 +1936,11 @@ class ScraperWorker {
     }
   }
 
-  // Start scraper
   async start() {
     this.logger.info("▶️ Starting scraper");
     this.status = "idle";
   }
 
-  // Get scraper health
   getHealth() {
     return {
       instanceId: this.instanceId,
@@ -2000,19 +1950,20 @@ class ScraperWorker {
       tasksCompleted: this.tasksCompleted,
       channelsScraped: this.channelsScraped,
       emailsFound: this.emailsFound,
+      currentStrategy: this.currentStrategy,
+      consecutiveSkips: this.consecutiveSkips,
     };
   }
 
-  // Complete task
   async completeTask(stats) {
     this.tasksCompleted++;
     this.channelsScraped += stats.channelsSaved || 0;
     this.emailsFound += stats.emailsFound || 0;
     this.lastActive = new Date();
     this.consecutiveFails = 0;
+    this.consecutiveSkips = 0;
   }
 
-  // Fail task
   async failTask() {
     this.lastActive = new Date();
   }
@@ -2056,7 +2007,6 @@ app.use(
 
 // ==================== API ROUTES ====================
 
-// Countries list
 app.get("/api/countries", (req, res) => {
   const countries = [
     { code: "US", name: "United States" },
@@ -2070,7 +2020,6 @@ app.get("/api/countries", (req, res) => {
   res.json(countries);
 });
 
-// Start scrape task
 app.post("/api/scrape", async (req, res) => {
   try {
     const {
@@ -2108,8 +2057,7 @@ app.post("/api/scrape", async (req, res) => {
     });
 
     res.json({
-      message:
-        "Task queued successfully",
+      message: "Task queued successfully",
       taskId: task._id,
     });
   } catch (error) {
@@ -2118,7 +2066,6 @@ app.post("/api/scrape", async (req, res) => {
   }
 });
 
-// Get scraper status
 app.get("/api/scrapers", async (req, res) => {
   try {
     const status = await scraperManager.getStatus();
@@ -2128,7 +2075,6 @@ app.get("/api/scrapers", async (req, res) => {
   }
 });
 
-// Get channels - SIRF EMAILS WALE
 app.get("/api/channels", async (req, res) => {
   try {
     const {
@@ -2176,7 +2122,6 @@ app.get("/api/channels", async (req, res) => {
   }
 });
 
-// Get stats
 app.get("/api/stats", async (req, res) => {
   try {
     const totalChannels = await Channel.countDocuments();
@@ -2214,7 +2159,6 @@ app.get("/api/stats", async (req, res) => {
   }
 });
 
-// Get queue status
 app.get("/api/queue", async (req, res) => {
   try {
     const queue = await Queue.find().sort({ createdAt: -1 }).limit(50);
@@ -2233,7 +2177,6 @@ app.get("/api/queue", async (req, res) => {
   }
 });
 
-// Export channels CSV
 app.get("/api/export/channels", async (req, res) => {
   try {
     const channels = await Channel.find({ hasEmails: true }).limit(50000);
@@ -2276,7 +2219,6 @@ app.get("/api/export/channels", async (req, res) => {
   }
 });
 
-// Health check
 app.get("/api/health", (req, res) => {
   res.json({
     status: "healthy",
@@ -2300,9 +2242,11 @@ server.listen(PORT, async () => {
   );
   console.log(`   - Dynamic key allocation - koi bhi key kaam karegi`);
   console.log(`   - Multiple parallel scrapers`);
-  console.log(`   - 🔴 SIRF EMAILS WALE CHANNELS SAVE HONGE`);
+  console.log(`   - 🔴 SIRF VALID EMAILS WALE CHANNELS SAVE HONGE (g.com blocked)`);
   console.log(`   - Auto key rotation on quota exceed`);
   console.log(`   - Smart task distribution`);
+  console.log(`   - 🔄 Adaptive scraping strategy (changes after 5 skips)`);
+  console.log(`   - ✅ Enhanced email validation (blocks g.com, etc.)`);
 
   await scraperManager.initialize();
 
@@ -2311,7 +2255,6 @@ server.listen(PORT, async () => {
   );
 });
 
-// Graceful shutdown
 process.on("SIGINT", async () => {
   console.log("\nShutting down...");
   await systemLogger.info("Server shutting down");

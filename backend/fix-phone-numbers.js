@@ -8,7 +8,7 @@ import readline from 'readline';
 dotenv.config();
 
 // MongoDB connection
-const mongoURI = 'mongodb+srv://mohitsatyarthi11_db_user:QRru60sn0yOznetN@cluster0.e8jcgej.mongodb.net/?appName=Cluster0';
+const mongoURI = 'mongodb+srv://mohitsatyarthi11_db_user:fGH17FphUoWt0B3X@cluster0.jmyra5z.mongodb.net/?appName=Cluster0';
 
 // Channel Schema
 const channelSchema = new mongoose.Schema({
