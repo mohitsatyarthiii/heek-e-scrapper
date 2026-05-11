@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // MongoDB connection
-const mongoURI = "mongodb+srv://mohitsatyarthi11_db_user:fGH17FphUoWt0B3X@cluster0.jmyra5z.mongodb.net/?appName=Cluster0";
+const mongoURI = "mongodb+srv://mohitsatyarthi11_db_user:3oh44WDniMDQqwHD@cluster0.focmc3a.mongodb.net/?appName=Cluster0";
 
 // Email validation patterns
 const EMAIL_PATTERNS = {
