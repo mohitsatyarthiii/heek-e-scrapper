@@ -281,7 +281,7 @@ class DailyQuotaTracker {
 const dailyQuotaTracker = new DailyQuotaTracker();
 
 // ==================== MONGODB CONNECTION ====================
-const mongoURI = "mongodb+srv://mohitsatyarthi11_db_user:kv39J8DsHeL5j8Dt@cluster0.axfersx.mongodb.net/?appName=Cluster0";
+const mongoURI = "";
 
 mongoose
   .connect(mongoURI, { serverSelectionTimeoutMS: 5000 })

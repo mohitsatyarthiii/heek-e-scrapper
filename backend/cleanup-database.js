@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // MongoDB connection
-const mongoURI = 'mongodb+srv://mohitsatyarthi11_db_user:kv39J8DsHeL5j8Dt@cluster0.axfersx.mongodb.net/?appName=Cluster0';
+const mongoURI = '';
 
 // Channel Schema (same as your schema)
 const channelSchema = new mongoose.Schema({
